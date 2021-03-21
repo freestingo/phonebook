@@ -1,7 +1,22 @@
 const express = require('express')
+const morgan = require('morgan')
 const app = express()
+const unknownEndpoint = (request, response, next) =>
+    response.status(404).send({error: 'unknown endpoint'})
+
+/*
+    overwriting express send function and adding a
+    customBody field to the response object
+*/
+const originalSend = app.response.send
+app.response.send = function sendOverWrite(body) {
+    originalSend.call(this, body)
+    this.customBody = body
+}
 
 app.use(express.json())
+morgan.token('resbody', (request, response) => JSON.stringify(response.customBody));
+app.use(morgan(':method :url :status :response-time ms - :resbody'));
 
 let persons = [
     {
@@ -90,6 +105,8 @@ app.delete(
         response.status(204).end()
     }
 )
+
+app.use(unknownEndpoint)
 
 const PORT = 3001
 app.listen(
