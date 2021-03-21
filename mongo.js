@@ -36,7 +36,6 @@ const saveNewPerson = () => {
         console.log(`Added ${name} (number ${number}) to the phonebook!`)
         mongoose.connection.close()
     })
-
 }
 
 const printPeople = () =>

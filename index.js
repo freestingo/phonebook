@@ -1,7 +1,9 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
 const app = express()
+const Person = require('./models/person')
 const unknownEndpoint = (request, response, next) =>
     response.status(404).send({error: 'unknown endpoint'})
 
@@ -21,60 +23,33 @@ app.use(morgan(':method :url :status :response-time ms - :resbody'))
 app.use(cors())
 app.use(express.static('build'))
 
-let persons = [
-    {
-        id: 1,
-        name: 'Arto Hellas',
-        number: '040-123456'
-    },
-    {
-        id: 2,
-        name: 'Ada Lovelace',
-        number: '39-44-6231345'
-    },
-    {
-        id: 3,
-        name: 'Dan Abramov',
-        number: '12-34-9824135'
-    },
-    {
-        id: 4,
-        name: 'Mary Poppendick',
-        number: '39-23-4562623'
-    }
-]
-
 app.get(
     '/info',
     (request, response) =>
-        response.send(`
-            <p>Phonebook has info for ${persons.length} people.</p>
-            <p>${new Date()}</p>
-        `)
+        Person.find({})
+            .then(people =>
+                response.send(`
+                    <p>Phonebook has info for ${people.length} people.</p>
+                    <p>${new Date()}</p>
+                `)
+            )
 )
 
 app.get(
-    '/api/persons',
-    (request, response) => response.json(persons)
+    '/api/people',
+    (request, response) =>
+        Person.find({}).then(people => response.json(people))
 )
 
 app.get(
-    '/api/persons/:id',
-    (request, response) => {
-        const id = Number(request.params.id)
-        const person = persons.find(p => p.id === id)
-        
-        person
-            ? response.json(person)
-            : response.status(400).end()
-    }
+    '/api/people/:id',
+    (request, response) =>
+        Person.findById(request.params.id)
+            .then(person => response.json(person))
 )
-
-const randomId = () =>
-    Math.floor(Math.random() * 100)
 
 app.post(
-    '/api/persons',
+    '/api/people',
     (request, response) => {
         const body = request.body
         
@@ -84,34 +59,24 @@ app.post(
             })
         }
 
-        if (persons.map(p => p.name).includes(body.name)) {
-            return response.status(403).json({
-                error: `person already exists in phonebook!`
-            })
-        }
-
-        const person = {
-            id: randomId(),
+        const person = new Person({
             name: body.name,
             number: body.number
-        }
-        persons = persons.concat(person)
-        response.json(person)
+        })
+        person.save().then(savedPerson => response.json(savedPerson))
     }
 )
 
 app.delete(
-    '/api/persons/:id',
-    (request, response) => {
-        const id = Number(request.params.id)
-        persons = persons.filter(p => p.id !== id)
-        response.status(204).end()
-    }
+    '/api/people/:id',
+    (request, response) =>
+        Person.findByIdAndDelete(request.params.id)
+            .then(note => response.status(204).end())
 )
 
 app.use(unknownEndpoint)
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(
     PORT,
     () => console.log(`Server running on port ${PORT}`)
