@@ -68,7 +68,7 @@ app.put(
 
 app.post(
     '/api/people',
-    (request, response) => {
+    (request, response, next) => {
         const body = request.body
         
         /*
