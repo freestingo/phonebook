@@ -23,12 +23,14 @@ const personSchema = new mongoose.Schema({
     name: {
         type: String,
         minlength: 3,
-        required: true
+        required: true,
+        unique: true
     },
     number: {
         type: String,
         minlength: 10,
-        required: true
+        required: true,
+        unique: true
     },
 })
 personSchema.plugin(uniqueValidator)
