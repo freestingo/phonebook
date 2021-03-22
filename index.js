@@ -70,14 +70,6 @@ app.post(
     '/api/people',
     (request, response, next) => {
         const body = request.body
-        
-        /*
-        if (!body.name || !body.number) {
-            return response.status(400).json({
-                error: `can't save entry with missing data!`
-            })
-        }
-        */
 
         const person = new Person({
             name: body.name,
